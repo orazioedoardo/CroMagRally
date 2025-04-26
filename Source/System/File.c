@@ -13,7 +13,6 @@
 #include "game.h"
 #include "bones.h"
 #include "lzss.h"
-#include <string.h>
 
 /****************************/
 /*    PROTOTYPES            */
@@ -22,13 +21,6 @@
 static void ReadDataFromSkeletonFile(SkeletonDefType *skeleton, FSSpec *bg3dSpec, int skeletonType);
 static void ReadDataFromPlayfieldFile(FSSpec *specPtr);
 static void LoadTerrainSuperTileTextures(short fRefNum);
-static void LoadTerrainSuperTileTexturesSeamless(short fRefNum);
-
-static short InitSavedGamesListBox(Rect *r, WindowPtr myDialog);
-static short UpdateSavedGamesList(void);
-static short AddNewGameToFile(Str255 name);
-static void DeleteSelectedGame(void);
-static void LoadSelectedGame(void);
 
 
 /****************************/
@@ -157,10 +149,10 @@ char		path[64];
 
 	GAME_ASSERT(skeletonType >= 0 && skeletonType < MAX_SKELETON_TYPES);
 
-	snprintf(path, sizeof(path), ":Skeletons:%s.skeleton", kSkeletonNames[skeletonType]);
+	SDL_snprintf(path, sizeof(path), ":Skeletons:%s.skeleton", kSkeletonNames[skeletonType]);
 	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, path, &skeletonSpec);
 
-	snprintf(path, sizeof(path), ":Skeletons:%s.bg3d", kSkeletonNames[skeletonType]);
+	SDL_snprintf(path, sizeof(path), ":Skeletons:%s.bg3d", kSkeletonNames[skeletonType]);
 	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, path, &bg3dSpec);
 
 			/* OPEN THE FILE'S REZ FORK */
@@ -430,7 +422,7 @@ SkeletonFile_AnimHeader_Type	*animHeaderPtr;
 static OSErr MakeFSSpecForUserDataFile(const char* filename, FSSpec* spec)
 {
 	char path[256];
-	snprintf(path, sizeof(path), ":%s:%s", PREFS_FOLDER_NAME, filename);
+	SDL_snprintf(path, sizeof(path), ":%s:%s", PREFS_FOLDER_NAME, filename);
 
 	return FSMakeFSSpec(gPrefsFolderVRefNum, gPrefsFolderDirID, path, spec);
 }
@@ -445,7 +437,7 @@ FSSpec		file;
 long		count;
 long		eof = 0;
 char		fileMagic[64];
-long		magicLength = (long) strlen(magic) + 1;		// including null-terminator
+long		magicLength = (long) SDL_strlen(magic) + 1;		// including null-terminator
 
 	GAME_ASSERT(magicLength < (long) sizeof(fileMagic));
 
@@ -492,7 +484,7 @@ long		magicLength = (long) strlen(magic) + 1;		// including null-terminator
 	return noErr;
 
 fileIsCorrupt:
-	printf("File '%s' appears to be corrupt!\n", file.cName);
+	SDL_Log("File '%s' appears to be corrupt!", file.cName);
 	FSClose(refNum);
 	return badFileFormat;
 }
@@ -530,7 +522,7 @@ long				count;
 
 				/* WRITE MAGIC */
 
-	count = (long) strlen(magic) + 1;
+	count = (long) SDL_strlen(magic) + 1;
 	iErr = FSWrite(refNum, &count, (Ptr) magic);
 	if (iErr)
 	{
@@ -544,7 +536,7 @@ long				count;
 	iErr = FSWrite(refNum, &count, payloadPtr);
 	FSClose(refNum);
 
-	printf("Wrote %s\n", file.cName);
+	SDL_Log("Wrote %s", file.cName);
 
 	return iErr;
 }
@@ -566,7 +558,7 @@ OSErr LoadPrefs(void)
 		InitDefaultPrefs();
 	}
 
-	memcpy(&gDiskShadowPrefs, &gGamePrefs, sizeof(gDiskShadowPrefs));
+	SDL_memcpy(&gDiskShadowPrefs, &gGamePrefs, sizeof(gDiskShadowPrefs));
 
 	return err;
 }
@@ -577,14 +569,14 @@ OSErr LoadPrefs(void)
 void SavePrefs(void)
 {
 	// If prefs didn't change relative to what's on disk, don't bother rewriting them
-	if (0 == memcmp(&gDiskShadowPrefs, &gGamePrefs, sizeof(gGamePrefs)))
+	if (0 == SDL_memcmp(&gDiskShadowPrefs, &gGamePrefs, sizeof(gGamePrefs)))
 	{
 		return;
 	}
 
 	SaveUserDataFile(PREFS_FILENAME, PREFS_MAGIC, sizeof(PrefsType), (Ptr)&gGamePrefs);
 
-	memcpy(&gDiskShadowPrefs, &gGamePrefs, sizeof(gGamePrefs));
+	SDL_memcpy(&gDiskShadowPrefs, &gGamePrefs, sizeof(gGamePrefs));
 }
 
 #pragma mark -
@@ -598,8 +590,8 @@ void SavePrefs(void)
 
 void SetDefaultPlayerSaveData(void)
 {
-	memset(gGamePrefs.playerName, 0, sizeof(gGamePrefs.playerName));
-	snprintf(gGamePrefs.playerName, sizeof(gGamePrefs.playerName), "PLAYER");
+	SDL_memset(gGamePrefs.playerName, 0, sizeof(gGamePrefs.playerName));
+	SDL_snprintf(gGamePrefs.playerName, sizeof(gGamePrefs.playerName), "PLAYER");
 
 	SetPlayerProgression(0);
 }
@@ -678,7 +670,7 @@ OSErr LoadScoreboardFile(void)
 
 	if (err != noErr)
 	{
-		memset(&gScoreboard, 0, sizeof(gScoreboard));
+		SDL_memset(&gScoreboard, 0, sizeof(gScoreboard));
 	}
 
 	return err;
@@ -699,7 +691,7 @@ void LoadCavemanSkins(void)
 		{
 			if (!gCavemanSkins[sex][j])
 			{
-				snprintf(skinPath, sizeof(skinPath), ":Sprites:Skins:%s%d.png", characterName, j);
+				SDL_snprintf(skinPath, sizeof(skinPath), ":Sprites:Skins:%s%d.png", characterName, j);
 				gCavemanSkins[sex][j] = MO_GetTextureFromFile(skinPath, GL_RGBA);
 			}
 		}
@@ -1422,11 +1414,7 @@ Ptr						tempBuffer16 = nil;
 	if (iErr)
 		DoFatalAlert("ReadDataFromPlayfieldFile: FSpOpenDF failed!");
 
-#if HQ_TERRAIN
-	LoadTerrainSuperTileTexturesSeamless(fRefNum);
-#else
 	LoadTerrainSuperTileTextures(fRefNum);
-#endif
 
 			/* CLOSE THE FILE */
 
@@ -1435,6 +1423,7 @@ Ptr						tempBuffer16 = nil;
 		SafeDisposePtr(tempBuffer16);
 }
 
+#if !HQ_TERRAIN
 
 static void LoadTerrainSuperTileTextures(short fRefNum)
 {
@@ -1484,7 +1473,7 @@ static void LoadTerrainSuperTileTextures(short fRefNum)
 	SafeDisposePtr(pixels);
 }
 
-#if HQ_TERRAIN
+#else  // HQ_TERRAIN below
 
 static void Blit16(
 		const char*			src,
@@ -1508,15 +1497,15 @@ static void Blit16(
 
 	for (int row = 0; row < srcRectHeight; row++)
 	{
-		memcpy(dst, src, bpp * srcRectWidth);
+		SDL_memcpy(dst, src, bpp * srcRectWidth);
 		src += bpp * srcWidth;
 		dst += bpp * dstWidth;
 	}
 }
 
-static void LoadTerrainSuperTileTexturesSeamless(short fRefNum)
+static void LoadTerrainSuperTileTextures(short fRefNum)
 {
-	memset(gSuperTileTextureNames, 0, sizeof(gSuperTileTextureNames[0]) * gNumUniqueSuperTiles);
+	SDL_memset(gSuperTileTextureNames, 0, sizeof(gSuperTileTextureNames[0]) * gNumUniqueSuperTiles);
 
 			/* ALLOC BUFFERS */
 
@@ -1582,7 +1571,7 @@ static void LoadTerrainSuperTileTexturesSeamless(short fRefNum)
 		int ch = th + 2;
 
 		// Clear canvas to black
-		memset(canvas, 0, canvasW * canvasH * sizeof(UInt16));
+		SDL_memset(canvas, 0, canvasW * canvasH * sizeof(UInt16));
 
 		// Blit supertile image to middle of canvas
 		Blit16(TILEIMAGE(col, row), tw, th, 0, 0, tw, th, canvas, cw, ch, 1, 1);
@@ -1622,7 +1611,8 @@ static void LoadTerrainSuperTileTexturesSeamless(short fRefNum)
 	SafeDisposePtr(allImages);
 	SafeDisposePtr(canvas);
 }
-#endif
+
+#endif  // HQ_TERRAIN
 
 
 

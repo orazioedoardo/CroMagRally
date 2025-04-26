@@ -14,9 +14,6 @@
 #include "menu.h"
 #include "miscscreens.h"
 #include "network.h"
-#include "version.h"
-
-#include <SDL.h>
 
 /****************************/
 /*    PROTOTYPES            */
@@ -30,10 +27,6 @@ static void OnConfirmPlayMenu(const MenuItem* mi);
 static void OnPickGameMode(const MenuItem* mi);
 static void OnPickTournamentAge(const MenuItem* mi);
 static void OnPickHostOrJoin(const MenuItem* mi);
-static void OnPickLanguage(const MenuItem* mi);
-static void OnToggleFullscreen(const MenuItem* mi);
-static void OnAdjustMusicVolume(const MenuItem* mi);
-static void OnAdjustSFXVolume(const MenuItem* mi);
 static void OnPickClearSavedGame(const MenuItem* mi);
 static void OnPickTagDuration(const MenuItem* mi);
 
@@ -364,7 +357,7 @@ OGLVector3D			fillDirection2 = { -1, -.2, -.5 };
 		.scale = .25f,
 		.slot = MENU_SLOT
 	};
-	ObjNode* versionText = TextMesh_New(PROJECT_VERSION, kTextMeshAlignLeft, &versionDef);
+	ObjNode* versionText = TextMesh_New(GAME_VERSION, kTextMeshAlignLeft, &versionDef);
 	versionText->ColorFilter = (OGLColorRGBA) {.75f, .75f, .75f, .75f};
 
 

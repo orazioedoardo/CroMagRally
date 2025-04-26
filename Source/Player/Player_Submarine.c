@@ -10,7 +10,7 @@
 /****************************/
 
 #include "game.h"
-#include <SDL_scancode.h>
+#include <SDL3/SDL_scancode.h>
 
 /****************************/
 /*    PROTOTYPES            */
@@ -20,7 +20,6 @@ static void MovePlayer_Submarine(ObjNode *theNode);
 static void MovePlayer_Sub_Multipass(ObjNode *theNode);
 static void DoSubmarineMotion(ObjNode *theNode);
 static void UpdatePlayer_Submarine(ObjNode *theNode);
-static void RotateSubmarine(ObjNode *theNode);
 static Boolean DoSubCollisionDetect(ObjNode *vehicle);
 static void SubHitSub(ObjNode *car1, ObjNode *car2);
 static void DoCPUControl_Sub(ObjNode *theNode);
@@ -160,7 +159,7 @@ float				oldFPS,oldFPSFrac;
 		&& GetKeyState(SDL_SCANCODE_P)
 		&& GetKeyState(SDL_SCANCODE_U))	//---------- hack to make player a CPU
 	{
-		puts("Engage submarine autopilot");
+		SDL_Log("Engage submarine autopilot");
 		gAutoPilot = true;
 	}
 

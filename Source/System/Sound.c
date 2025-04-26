@@ -11,14 +11,13 @@
 /***************/
 
 #include "game.h"
-#include <string.h>
+
 
 /****************************/
 /*    PROTOTYPES            */
 /****************************/
 
 static short FindSilentChannel(void);
-static short EmergencyFreeChannel(void);
 static void Calc3DEffectVolume(short effectNum, const OGLPoint3D *where, float volAdjust, uint32_t *leftVolOut, uint32_t *rightVolOut);
 
 
@@ -189,7 +188,7 @@ OSErr			iErr;
 
 			/* INIT BANK INFO */
 
-	memset(gLoadedEffects, 0, sizeof(gLoadedEffects));
+	SDL_memset(gLoadedEffects, 0, sizeof(gLoadedEffects));
 
 			/******************/
 			/* ALLOC CHANNELS */
@@ -266,7 +265,7 @@ OSErr err;
 		return;
 	}
 
-	snprintf(path, sizeof(path), ":Audio:%s:%s.aiff", kSoundBankNames[effectDef->bank], effectDef->filename);
+	SDL_snprintf(path, sizeof(path), ":Audio:%s:%s.aiff", kSoundBankNames[effectDef->bank], effectDef->filename);
 
 	err = FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, path, &spec);
 	if (err != noErr)
@@ -301,7 +300,7 @@ void DisposeSoundEffect(int effectNum)
 	if (loadedSound->sndHandle)
 	{
 		DisposeHandle((Handle) loadedSound->sndHandle);
-		memset(loadedSound, 0, sizeof(LoadedEffect));
+		SDL_memset(loadedSound, 0, sizeof(LoadedEffect));
 	}
 }
 
@@ -1192,29 +1191,6 @@ SCStatus	theStatus;
 	GAME_ASSERT(!err);
 
 	return (theStatus.scChannelBusy);
-}
-
-/***************** EMERGENCY FREE CHANNEL **************************/
-//
-// This is used by the music streamer when all channels are used.
-// Since we must have a channel to play music, we arbitrarily kill some other channel.
-//
-
-static short EmergencyFreeChannel(void)
-{
-short	i,c;
-
-	for (i = 0; i < gMaxChannels; i++)
-	{
-		c = i;
-		StopAChannel(&c);
-		return(i);
-	}
-
-		/* TOO BAD, GOTTA NUKE ONE OF THE STREAMING CHANNELS IT SEEMS */
-
-	StopAChannel(0);
-	return(0);
 }
 
 
