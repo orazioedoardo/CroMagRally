@@ -14,6 +14,10 @@
 #include "bones.h"
 #include "lzss.h"
 
+#if __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 /****************************/
 /*    PROTOTYPES            */
 /****************************/
@@ -535,10 +539,26 @@ long				count;
 	count = payloadLength;
 	iErr = FSWrite(refNum, &count, payloadPtr);
 	FSClose(refNum);
+	SyncPrefsFolder();
 
 	SDL_Log("Wrote %s", file.cName);
 
 	return iErr;
+}
+
+/******************** SYNC PREFS FOLDER **********************/
+//
+// On the web, the prefs folder lives in IndexedDB (mounted by the web page).
+// Call this after writing to it so that the changes survive a page reload.
+//
+
+void SyncPrefsFolder(void)
+{
+#if __EMSCRIPTEN__
+	EM_ASM(FS.syncfs(false, function (err) {
+		if (err) console.warn("Saving files failed:", err);
+	}););
+#endif
 }
 
 

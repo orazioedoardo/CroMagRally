@@ -350,8 +350,14 @@ GLuint OGL_TextureMap_Load(void *imageMemory, int width, int height,
 							GLint srcFormat,  GLint destFormat, GLint dataType);
 GLuint OGL_TextureMap_LoadImageFile(const char* path, int* width, int* height);
 void OGL_FixColorGamma(OGLColorRGBA* color);
+#if __EMSCRIPTEN__ && !_DEBUG
+// In the browser, glGetError is a synchronous round trip to the GPU process,
+// and calling it after every GL call causes severe stuttering.
+#define OGL_CheckError() ((GLenum) GL_NO_ERROR)
+#else
 GLenum _OGL_CheckError(const char* file, int line);
 #define OGL_CheckError() _OGL_CheckError(__FILE__, __LINE__)
+#endif
 
 void OGL_PushState(void);
 void OGL_PopState(void);

@@ -12,3 +12,9 @@ void Exit2D(void);
 int GetNumDisplays(void);
 void MoveToPreferredDisplay(void);
 void SetFullscreenMode(bool enforceDisplayPref);
+void SwapGameWindow(void);
+
+#if __EMSCRIPTEN__
+extern double	gAnimationFrameTime;
+extern uint32_t	gAnimationFrameCount;
+#endif

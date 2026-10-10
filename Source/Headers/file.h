@@ -123,6 +123,7 @@ SkeletonDefType *LoadSkeletonFile(short skeletonType);
 
 OSErr LoadUserDataFile(const char* path, const char* magic, long payloadLength, Ptr payloadPtr);
 OSErr SaveUserDataFile(const char* path, const char* magic, long payloadLength, Ptr payloadPtr);
+void SyncPrefsFolder(void);
 
 OSErr LoadPrefs(void);
 void SavePrefs(void);

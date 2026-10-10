@@ -20,6 +20,9 @@ extern	SDL_Window* 	gSDLWindow;
 /****************************/
 
 #define	DEFAULT_FPS			9
+#if __EMSCRIPTEN__
+#define	MAX_FPS				500			// same-frame timer reads in the browser (see CalcFramesPerSecond)
+#endif
 #define	PTRCOOKIE_SIZE		16
 
 /**********************/
@@ -391,6 +394,46 @@ static UnsignedWide time;
 UnsignedWide currTime;
 unsigned long deltaTime;
 
+#if __EMSCRIPTEN__
+	// In the browser, frames are paced by requestAnimationFrame (see SwapGameWindow).
+	// The browser's frame timestamps are aligned to the display refresh, whereas the wall clock
+	// is read whenever the browser happens to wake us up (which jitters by a few ms) and is
+	// rounded to 0.1-1 ms (so two readings within one frame may be equal).
+
+	static uint32_t prevAnimationFrameCount = 0;
+	static uint32_t prevNumAnimationFrames = 0;
+	static double prevAnimationFrameTime = 0;
+
+	Microseconds(&currTime);
+	uint32_t numAnimationFrames = gAnimationFrameCount - prevAnimationFrameCount;
+
+	if (numAnimationFrames == 0)
+	{
+		// Called again within the same frame (e.g. to prime the timer before a loop):
+		// as far as the display is concerned, no time has passed
+		gFramesPerSecond = MAX_FPS;
+	}
+	else if (numAnimationFrames == 1 && prevNumAnimationFrames == 1)
+	{
+		// Steady state: called once per frame
+		gFramesPerSecond = 1000.0f / (float) (gAnimationFrameTime - prevAnimationFrameTime);
+	}
+	else
+	{
+		// First frame of a loop, or after a loading screen: use the wall clock like natively
+		deltaTime = currTime.lo - time.lo;
+		gFramesPerSecond = deltaTime > 0 ? 1000000.0f / deltaTime : MAX_FPS;
+	}
+
+	prevAnimationFrameCount = gAnimationFrameCount;
+	prevNumAnimationFrames = numAnimationFrames;
+	prevAnimationFrameTime = gAnimationFrameTime;
+
+	if (gFramesPerSecond > MAX_FPS)
+		gFramesPerSecond = MAX_FPS;
+	if (gFramesPerSecond < DEFAULT_FPS)			// (avoid divide by 0's later)
+		gFramesPerSecond = DEFAULT_FPS;
+#else
 	Microseconds(&currTime);
 	deltaTime = currTime.lo - time.lo;
 
@@ -398,6 +441,7 @@ unsigned long deltaTime;
 
 	if (gFramesPerSecond < DEFAULT_FPS)			// (avoid divide by 0's later)
 		gFramesPerSecond = DEFAULT_FPS;
+#endif
 
 #if _DEBUG
 	if (GetKeyState(SDL_SCANCODE_KP_PLUS))		// debug speed-up with KP_PLUS

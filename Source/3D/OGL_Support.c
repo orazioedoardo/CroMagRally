@@ -16,6 +16,10 @@
 #include <SDL3/SDL_opengl.h>
 #include <math.h>
 
+#if __EMSCRIPTEN__
+#include <gl4esinit.h>
+#endif
+
 extern SDL_Window*		gSDLWindow;
 //extern	GWorldPtr		gTerrainDebugGWorld;
 
@@ -353,6 +357,10 @@ static void OGL_CreateDrawContext(void)
 	if (!gAGLContext)
 		DoFatalAlert(SDL_GetError());
 
+#if __EMSCRIPTEN__
+	initialize_gl4es();																// gl4es needs a live WebGL context
+#endif
+
 	GAME_ASSERT(glGetError() == GL_NO_ERROR);
 
 
@@ -548,7 +556,7 @@ void OGL_DrawScene(void (*drawRoutine)(void))
 	{
 		glClearColor(0, 0, 0, 1);
 		glClear(GL_COLOR_BUFFER_BIT);
-		SDL_GL_SwapWindow(gSDLWindow);					// end render loop
+		SwapGameWindow();					// end render loop
 		return;
 	}
 #endif
@@ -648,7 +656,7 @@ void OGL_DrawScene(void (*drawRoutine)(void))
 
            /* SWAP THE BUFFS */
 
-	SDL_GL_SwapWindow(gSDLWindow);					// end render loop
+	SwapGameWindow();					// end render loop
 }
 
 
@@ -1042,7 +1050,9 @@ void OGL_Texture_SetOpenGLTexture(GLuint textureName)
 		DoFatalAlert("OGL_Texture_SetOpenGLTexture: glBindTexture failed!");
 
 
+#if !__EMSCRIPTEN__		// glGetError is a synchronous round trip to the GPU process in the browser
 	glGetError();
+#endif
 
 	glEnable(GL_TEXTURE_2D);
 }
@@ -1173,6 +1183,7 @@ OGLLightDefType	*lights;
 
 /******************** OGL: CHECK ERROR ********************/
 
+#if !(__EMSCRIPTEN__ && !_DEBUG)		// see ogl_support.h
 GLenum _OGL_CheckError(const char* file, const int line)
 {
 	GLenum error = glGetError();
@@ -1182,6 +1193,7 @@ GLenum _OGL_CheckError(const char* file, const int line)
 	}
 	return error;
 }
+#endif
 
 
 

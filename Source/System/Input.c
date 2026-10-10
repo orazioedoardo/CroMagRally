@@ -117,6 +117,7 @@ static void UpdateRawKeyboardStates(void)
 		UpdateKeyState(&gKeyboardStates[i], false);
 }
 
+#if !__EMSCRIPTEN__		// on the web, the page toggles fullscreen with Cmd+F
 static void ParseAltEnter(void)
 {
 	if (GetNewKeyState(SDL_SCANCODE_RETURN)
@@ -129,6 +130,7 @@ static void ParseAltEnter(void)
 	}
 
 }
+#endif
 
 static void UpdateMouseButtonStates(int mouseWheelDelta)
 {
@@ -306,8 +308,10 @@ void DoSDLMaintenance(void)
 	// Refresh the state of each individual keyboard key
 	UpdateRawKeyboardStates();
 
+#if !__EMSCRIPTEN__
 	// On ALT+ENTER, toggle fullscreen, and ignore ENTER until keyup
 	ParseAltEnter();
+#endif
 
 	// Refresh the state of each mouse button
 	UpdateMouseButtonStates(mouseWheelDelta);

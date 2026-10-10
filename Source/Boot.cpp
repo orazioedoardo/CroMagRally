@@ -146,10 +146,18 @@ retryVideo:
 	}
 
 	// Create window
+#if __EMSCRIPTEN__
+	// WebGL 1 context; gl4es emulates the legacy GL calls on top of it
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+#else
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+#endif
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 
+#if __EMSCRIPTEN__
+	gGamePrefs.antialiasingLevel = 0;		// no MSAA setting in the browser
+#endif
 	gCurrentAntialiasingLevel = gGamePrefs.antialiasingLevel;
 	if (gCurrentAntialiasingLevel != 0)
 	{

@@ -2,18 +2,6 @@
 #include <SDL3/SDL_gamepad.h>
 #include "input.h"
 
-#if __APPLE__
-	#define SC_THROWF1 SDL_SCANCODE_LGUI
-	#define SC_THROWF2 SDL_SCANCODE_RGUI
-	#define SC_THROWB1 SDL_SCANCODE_LALT
-	#define SC_THROWB2 SDL_SCANCODE_RALT
-#else
-	#define SC_THROWF1 SDL_SCANCODE_LCTRL
-	#define SC_THROWF2 SDL_SCANCODE_RCTRL
-	#define SC_THROWB1 SDL_SCANCODE_LALT
-	#define SC_THROWB2 SDL_SCANCODE_RALT
-#endif
-
 // Gamepad button/axis
 #define GB(x)		{kInputTypeButton, SDL_GAMEPAD_BUTTON_##x}
 #define GAPLUS(x)	{kInputTypeAxisPlus, SDL_GAMEPAD_AXIS_##x}
@@ -24,13 +12,13 @@ const InputBinding kDefaultInputBindings[NUM_CONTROL_NEEDS] =
 {
 	[kNeed_ThrowForward] =
 	{
-		.key = { SC_THROWF1, SC_THROWF2 },
+		.key = { SDL_SCANCODE_A },
 		.pad = { GB(NORTH), GAMINUS(RIGHTY) },
 	},
 
 	[kNeed_ThrowBackward] =
 	{
-		.key = { SC_THROWB1, SC_THROWB2 },
+		.key = { SDL_SCANCODE_Z },
 		.pad = { GB(WEST), GAPLUS(RIGHTY) },
 	},
 
@@ -42,37 +30,37 @@ const InputBinding kDefaultInputBindings[NUM_CONTROL_NEEDS] =
 
 	[kNeed_CameraMode] =
 	{
-		.key = { SDL_SCANCODE_GRAVE, SDL_SCANCODE_RETURN },
+		.key = { SDL_SCANCODE_V },
 		.pad = { GB(LEFT_SHOULDER) },
 	},
 
 	[kNeed_RearView] =
 	{
-		.key = { SDL_SCANCODE_LSHIFT, SDL_SCANCODE_RSHIFT },
+		.key = { SDL_SCANCODE_LSHIFT },
 		.pad = { GAPLUS(LEFT_TRIGGER) },
 	},
 
 	[kNeed_Forward] =
 	{
-		.key = { SDL_SCANCODE_UP, SDL_SCANCODE_W },
+		.key = { SDL_SCANCODE_UP },
 		.pad = { GB(SOUTH) },
 	},
 
 	[kNeed_Backward] =
 	{
-		.key = { SDL_SCANCODE_DOWN, SDL_SCANCODE_S },
+		.key = { SDL_SCANCODE_DOWN },
 		.pad = { GB(EAST) },
 	},
 
 	[kNeed_Left] =
 	{
-		.key = { SDL_SCANCODE_LEFT, SDL_SCANCODE_A },
+		.key = { SDL_SCANCODE_LEFT },
 		.pad = { GAMINUS(LEFTX) },
 	},
 
 	[kNeed_Right] =
 	{
-		.key = { SDL_SCANCODE_RIGHT, SDL_SCANCODE_D },
+		.key = { SDL_SCANCODE_RIGHT },
 		.pad = { GAPLUS(LEFTX) },
 	},
 
